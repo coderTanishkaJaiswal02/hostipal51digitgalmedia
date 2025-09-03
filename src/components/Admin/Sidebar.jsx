@@ -22,24 +22,13 @@ const Sidebar = ({ activeItem, handleItemClick, className = "" }) => {
   ];
 
   const userManagementItems = [
+   
     {
-      id: "create-user",
-      label: "Create User",
-      icon: UserPlus,
-      section: "user",
-    },
-    {
-      id: "user-list",
-      label: "User List",
+      id: "user-management",
+      label: "User Management",
       icon: Users,
       section: "user",
     },
-    // {
-    //   id: "user-management",
-    //   label: "User Management",
-    //   icon: Users,
-    //   section: "user",
-    // },
     {
       id: "role-management",
       label: "Role Management",
@@ -92,10 +81,10 @@ const Sidebar = ({ activeItem, handleItemClick, className = "" }) => {
           ))}
         </div>
 
-        {/* User Management Section */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2">
-            USER MANAGEMENT
+        {/* Management Section */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-2">
+             MANAGEMENT SECTION
           </h3>
           <div className="space-y-2">
             {userManagementItems.map((item) => (

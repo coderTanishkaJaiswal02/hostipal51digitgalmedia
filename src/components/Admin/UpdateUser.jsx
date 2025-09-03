@@ -1,5 +1,6 @@
 "use client";
-
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateUser, fetchUsers } from "../../redux/Slices/userSlice";
-import {fetchRoles} from "../../redux/Slices/roleSlice"
+import { fetchRoles } from "../../redux/Slices/roleSlice";
 
 const UpdateUser = ({ user, onBack }) => {
   const [formData, setFormData] = useState({
@@ -25,15 +26,12 @@ const UpdateUser = ({ user, onBack }) => {
     role_id: user?.role.id || "",
   });
 
-  
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const roles = useSelector((state) => state.role?.roles || []);
   console.log(roles);
-  
-  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -44,26 +42,33 @@ const UpdateUser = ({ user, onBack }) => {
 
   const dispatch = useDispatch();
 
-  
   useEffect(() => {
     dispatch(fetchRoles());
   }, [dispatch]);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  try {
-    await dispatch(updateUser({ id: user.id, formData })).unwrap();
-    await dispatch(fetchUsers()).unwrap();
-    alert("User updated successfully!");
-    onBack();
-  } catch (err) {
-    console.error("Update failed", err);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    try {
+      await dispatch(updateUser({ id: user.id, formData })).unwrap();
+      await dispatch(fetchUsers()).unwrap();
+
+      toast.success("User updated successfully 🎉", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+
+      onBack();
+    } catch (err) {
+      toast.error(err?.message || "Failed to update user ❌", {
+        position: "top-right",
+        autoClose: 4000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">

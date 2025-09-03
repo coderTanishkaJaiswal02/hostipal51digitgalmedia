@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { act } from "react";
 
 const BASE_URL = "http://hospital.51development.shop/api";
 const token = localStorage.getItem("token");
@@ -14,8 +13,6 @@ export const loginUser = createAsyncThunk(
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("clinic_id", res.data.clinic_id);
-
-      console.log(res.data);
 
       return res.data;
     } catch (err) {
@@ -59,6 +56,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.user;
+       
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;

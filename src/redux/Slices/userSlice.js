@@ -5,9 +5,10 @@ const BASE_URL = "http://hospital.51development.shop/api";
 const token = localStorage.getItem("token");
 const clinic_id = localStorage.getItem("clinic_id");
 
+// ---------------- CREATE USER ----------------
 export const createUser = createAsyncThunk(
-  "/user/createUser",
-  async (userData, { rejectedWithValue }) => {
+  "user/createUser",
+  async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/add-users`, userData, {
         headers: {
@@ -15,19 +16,18 @@ export const createUser = createAsyncThunk(
           "X-Clinic-ID": clinic_id,
         },
       });
-      console.log(response.data);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      const errorMessage =
+        error?.response?.data?.message || "Failed to create user";
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
-// fething users to show on admin dashboard
-
+// ---------------- FETCH USERS ----------------
 export const fetchUsers = createAsyncThunk(
   "user/fetchUsers",
-
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/users`, {
@@ -36,18 +36,18 @@ export const fetchUsers = createAsyncThunk(
           "X-Clinic-ID": clinic_id,
         },
       });
-
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      const errorMessage =
+        error?.response?.data?.message || "Failed to fetch users";
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
-// updating users
-
+// ---------------- UPDATE USER ----------------
 export const updateUser = createAsyncThunk(
-  "users/updateUser",
+  "user/updateUser",
   async ({ id, formData }, { rejectWithValue }) => {
     try {
       const config = {
@@ -59,12 +59,9 @@ export const updateUser = createAsyncThunk(
       };
 
       const data = new FormData();
-      data.append("name", formData.name);
-      data.append("email", formData.email);
-      data.append("password", formData.password);
-      data.append("password_confirmation", formData.password_confirmation);
-      data.append("mobile_no", formData.mobile_no);
-      data.append("role_id", formData.role_id);
+      Object.entries(formData).forEach(([key, value]) => {
+        data.append(key, value);
+      });
       data.append("_method", "PUT");
 
       const response = await axios.post(
@@ -72,23 +69,43 @@ export const updateUser = createAsyncThunk(
         data,
         config
       );
-
-      console.log("updated");
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      const errorMessage =
+        error?.response?.data?.message || "Failed to update user";
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
-// deleting user by admin
-
+// ---------------- DELETE USER ----------------
 export const deleteUser = createAsyncThunk(
   "user/deleteUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(
-        `${BASE_URL}/delete-users/${userId}`,
+      await axios.delete(`${BASE_URL}/delete-users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Clinic-ID": clinic_id,
+        },
+      });
+      return userId;
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "Failed to delete user";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// ---------------- TOGGLE USER STATUS ----------------
+export const toggleUserStatus = createAsyncThunk(
+  "user/toggleUserStatus",
+  async ({ id, status }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/users/${id}/status`,
+        { status },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,49 +113,33 @@ export const deleteUser = createAsyncThunk(
           },
         }
       );
-      return userId; // we'll remove by ID from store
+      return { id, status: response.data.status };
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      const errorMessage =
+        error?.response?.data?.message || "Failed to toggle status";
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
-// toggle button api
-
-export const toggleUserStatus = createAsyncThunk(
-  "users/toggleUserStatus",
-  async ({ id, status }) => {
-    const response = await axios.put(
-      `${BASE_URL}/users/${id}/status`,
-      { status },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-Clinic-ID": clinic_id,
-        },
-      }
-    );
-console.log(response.data);
-
-    return { id, status: response.data.status };
-  }
-);
-
+// ---------------- SLICE ----------------
 const userSlice = createSlice({
   name: "user",
   initialState: {
-    isLoading: false,
-    loading: false,
+    isLoading: false, // for create
+    loading: false, // for fetch/update
     success: false,
     error: null,
     users: [],
   },
-  reducers: {},
+  reducers: {
+    clearUserError: (state) => {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
-
-      // create user reducers
-
+      // CREATE USER
       .addCase(createUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -149,10 +150,10 @@ const userSlice = createSlice({
       })
       .addCase(createUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload || "Something went wrong";
-
-        // fetch-user reducers
+        state.error = action.payload;
       })
+
+      // FETCH USERS
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -164,35 +165,28 @@ const userSlice = createSlice({
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
 
-    // update user
-
-    builder
+      // UPDATE USER
       .addCase(updateUser.pending, (state) => {
         state.loading = true;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
         state.loading = false;
-        // optional: update local state.users array
         const updatedUser = action.payload?.user;
-        if (updatedUser && Array.isArray(state.users?.data)) {
-          const index = state.users.data.findIndex(
-            (u) => u.id === updatedUser.id
-          );
+        if (updatedUser && Array.isArray(state.users)) {
+          const index = state.users.findIndex((u) => u.id === updatedUser.id);
           if (index !== -1) {
-            state.users.data[index] = updatedUser;
+            state.users[index] = updatedUser;
           }
         }
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Update failed";
-      });
+        state.error = action.payload;
+      })
 
-    // dlete-user reducers
-
-    builder
+      // DELETE USER
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.users = state.users.filter((user) => user.id !== action.payload);
       })
@@ -200,17 +194,17 @@ const userSlice = createSlice({
         state.error = action.payload;
       })
 
-      // toggle section active inactive
+      // TOGGLE STATUS
       .addCase(toggleUserStatus.fulfilled, (state, action) => {
         const { id, status } = action.payload;
-        if (state.users && Array.isArray(state.users.data)) {
-          const user = state.users.data.find((u) => u.id === id);
-          if (user) user.is_active = status;
-          console.log(`user is : ${user}`);
-          
-        }
+        const user = state.users.find((u) => u.id === id);
+        if (user) user.is_active = status;
+      })
+      .addCase(toggleUserStatus.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });
 
+export const { clearUserError } = userSlice.actions;
 export default userSlice.reducer;
