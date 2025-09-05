@@ -96,7 +96,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto mt-16 p-6 lg:p-10 space-y-6">
+        <div className="flex-1 overflow-y-auto mt-16 p-4 lg:p-10 space-y-6">
           {renderContent()}
         </div>
       </div>

@@ -132,7 +132,7 @@ const RoleManagement = () => {
       </div>
 
       {/* Role List */}
-      <div className="p-6">
+      <div className="p-2">
         {filteredRoles.length > 0 ? (
           <div className="space-y-4">
             {filteredRoles.map((role) => (
