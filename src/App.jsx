@@ -6,6 +6,7 @@ import ProtectedRoutes from "./Routes/ProtectedRoutes";
 import UserDashboard from "./pages/UserDashboard";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DrAvailablities from "./components/Admin/DrAvailablities";
 
 const App = () => {
   return (
@@ -16,7 +17,7 @@ const App = () => {
           path="/user-dashboard"
           element={
             <ProtectedRoutes>
-              <UserDashboard />
+              <AdminDashboard/>
             </ProtectedRoutes>
           }
         />
@@ -25,6 +26,14 @@ const App = () => {
           element={
             <ProtectedRoutes>
               <AdminDashboard />
+            </ProtectedRoutes>
+          }
+        />
+         <Route
+          path="/dr-availablities"
+          element={
+            <ProtectedRoutes>
+              <DrAvailablities />
             </ProtectedRoutes>
           }
         />
