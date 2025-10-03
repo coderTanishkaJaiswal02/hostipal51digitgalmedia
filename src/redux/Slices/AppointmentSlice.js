@@ -24,6 +24,7 @@ export const fetchAppointments = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.get("/appointments");
+      console.log("Appointments",res.data.data);
       return res.data?.data || [];
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -39,7 +40,7 @@ export const fetchDoctors = createAsyncThunk(
       const res = await axiosInstance.get("/doctors");
       const obj = {};
       (res.data?.data || []).forEach((d) => (obj[d.id] = d));
-      console.log("Doctor",res.data.data);
+    
       
       return obj;
     } catch (err) {
@@ -56,7 +57,7 @@ export const fetchPatients = createAsyncThunk(
       const res = await axiosInstance.get("/patients");
       const obj = {};
       (res.data?.data || []).forEach((p) => (obj[p.id] = p));
-      console.log("Patient",res.data.data);
+    
       
       return obj;
     } catch (err) {
